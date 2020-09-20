@@ -25,7 +25,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   spent a substantial amount of time, figuring out, from all sources I could. I hope you
   have a good time near this singularity. 
   I am yet to figure out why I named this a singularity. 
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "/singularity" # the subpath of your site, e.g. /blog
 url: "masterskepticista.github.io" # the base hostname & protocol 
 twitter_username: elevated_quark
 github_username:  MasterSkepticista
