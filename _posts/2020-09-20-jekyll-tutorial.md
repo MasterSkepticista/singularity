@@ -2,39 +2,43 @@
 layout: post
 title:  "First Jekyll Blog: How To"
 date:   2020-09-20 18:34:42 +0530
-categories: no-nonsense guides
+excerpt: "It has been quite a while to do some full-tilt blogging. Tried (once) on medium, but eventually prepared myself to do it with the intent of (also) making an open source contribution. I started on Jekyll."
 ---
-So when a bunch of neurons fired to make me feel like starting a blog, it was tough to quickly digest the variety of methods the community used, just to start creating a GitHub blogsite.
 
-Ok, ok, I hear you, I hear you, and those bunch of neurons came to a verdict.
+So when a bunch of neurons fired to make me feel like starting a blog, it was tough to quickly digest the variety of methods the community used, just to start creating a GitHub blogsite. The other option was to write on Medium, which I attempted once, [here](https://medium.com/@karanshah1698/yet-another-installing-tensorflow-gpu-on-windows-2d7fc64af394). Medium is great for articles, don't get me wrong. But making an open source contribution seemed not a bad idea afterall. Not to mention a bit of web development that I would be taking along with Github pages.
+
+Promise I'll make this tutorial as easy as I can. Because when I got it up and running for the first time, I took up a TODO.
+
 ```bash
 If you are able to get this thing working.
 Write the first blog on how to do what you just did: minus the clutter.
 ```
-What a great time to be alive. Now you know why you are here. So let's get straight into it.
+
+What a great time to be alive. So let's get straight into it.
 
 You need to know two things to make your blogsite:
 1. How to write `markdown` files.
-2. How to use keyboard and mouse.
+2. A bit of patience.
 
-Know already? Great. We're good to go.
-
-If you are on Ubuntu/Linux, the steps are straightforward. If you are a Windows user, unfortun... noo we have an easier way. You can emulate (not really, but containerize) a Linux environment on Windows using WSL.
+If you are on Ubuntu/Linux, the steps are straightforward. If you are a Windows user, unfortun... noo we have an easier way. You can have a Linux environment, baked right into your Windows, hiding from you... a Linux environment on Windows using WSL. Branch [here](wsl-install.html) if you're into installing that. It's quick!
 
 ## Environment Setup
 
-0. [Windows only] Install WSL: Windows Subsystem for Linux, branch to this [page](wsl-install.html) if you haven't done that before, and return.
-
-1. Fire up a terminal (WSL or Linux, it should be the same).
+1. Fire up a terminal (WSL or Linux, its now the same).
 2. Sequentially shoot these commands:
 
     ```bash
+    # refresh package list
     sudo apt-get update -y
-    sudo apt-add-repository ppa:brightbox/ruby-ng # add PPA to repository
-    sudo apt-get update # refresh package list
-    sudo apt-get install ruby2.5 ruby2.5-dev build-essential dh-autoreconf # install ruby, which will install gems (and later jekyll)
+    # add PPA to repository. This tells ubuntu where to search for Ruby
+    sudo apt-add-repository ppa:brightbox/ruby-ng
+    # refresh package list, again
+    sudo apt-get update
+    # install ruby, which will install gems (Ruby package manager, of sorts)
+    sudo apt-get install ruby2.5 ruby2.5-dev build-essential dh-autoreconf
     ```
-3. Set up your Ruby to run in non-sudo mode. This is sometimes required if you face permission errors. Better do it.
+
+3. Set up your Ruby to run in non-sudo mode. This is sometimes required if you face permission errors. Better do it. These two commands tell Ruby as to where to search for *gems* (packages), every time you spawn a terminal.
     ```bash
     # Append Ruby exports to bashrc
     echo "export GEM_HOME=$HOME/gems" >> ~/.bashrc
@@ -48,12 +52,19 @@ If you are on Ubuntu/Linux, the steps are straightforward. If you are a Windows 
 5. This will take some time. Sit back, relax.
 6. Once finished, navigate to your workspace.
     ```bash
-    cd # Here I'm navigating to my $HOME dir
-    jekyll new cliche_hello_world # This is where your webpages will be stored
-    cd cliche_hello_world/
-    bundle exec jekyll serve
+    quark@karan:~$ cd # This takes you to $HOME
+
+    # This is where your webpages will be stored
+    quark@karan:~$ jekyll new cliche_hello_world
+    quark@karan:~$ cd cliche_hello_world/
+
+    # Build the sample/template as-is
+    quark@karan:~/cliche_hello_world$ jekyll build
+
+    # Serve your website locally
+    quark@karan:~/cliche_hello_world$ jekyll serve
     ```
-7. Fire up your browser with the given address. Most cases it is the `localhost:4000`. This is how it should look like:
+7. Fire up your browser with the given address. Default is the `localhost:4000`. This is how it should look like:
     ```bash
     Configuration file: /home/user/cliche_hello_world/_config.yml
             Source: /home/user/cliche_hello_world

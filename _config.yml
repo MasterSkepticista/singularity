@@ -8,7 +8,7 @@
 # For technical reasons, this file is *NOT* reloaded automatically when you use
 # 'bundle exec jekyll serve'. If you change this file, please restart the server process.
 #
-# If you need help with YAML syntax, here are some quick references for you: 
+# If you need help with YAML syntax, here are some quick references for you:
 # https://learn-the-web.algonquindesign.ca/topics/markdown-yaml-cheat-sheet/#yaml
 # https://learnxinyminutes.com/docs/yaml/
 #
@@ -19,16 +19,13 @@
 # in the templates via {{ site.myvariable }}.
 
 title: Karan's Singularity
-email: karanshah1698@gmail.com
+email:
 description: >- # this means to ignore newlines until "baseurl:"
-  This is an abode of hacks, fixes and solutions which I 
-  spent a substantial amount of time, figuring out, from all sources I could. I hope you
-  have a good time near this singularity. 
-  I am yet to figure out why I named this a singularity. 
+  The Universe is under no obligation to make sense to you.
 baseurl: "/singularity" # the subpath of your site, e.g. /blog
-url: "masterskepticista.github.io" # the base hostname & protocol 
+url: "masterskepticista.github.io" # the base hostname & protocol
 twitter_username: elevated_quark
-github_username:  MasterSkepticista
+github_username:  masterskepticista
 
 # Build settings
 theme: minima
