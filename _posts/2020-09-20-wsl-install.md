@@ -5,7 +5,7 @@ excerpt: "Setting up a wizardry was once painful on Windows, as easy it was on L
 date:   2020-09-20 19:57:42 +0530
 ---
 
-Visual Studop Code has been around for all my development over Remote-SSH at my workplace. Windows development isn't just as comfortable, to someone whose mainline work has revolved around a lot of packages, libraries and builds. Sure, you could install all Windows packages for common utilities like Git, Bash, Diff tools and GCC, but something always felt disconnected doing that on Windows.
+Visual Studio Code has been around for all my development over Remote-SSH at my workplace. Windows development isn't just as comfortable, to someone whose mainline work has revolved around a lot of packages, libraries and builds. Sure, you could install all Windows packages for common utilities like Git, Bash, Diff tools and GCC, but something always felt disconnected doing that on Windows.
 
 Now it is obvious to guess what else I could do: Install a VM (heck, that's slow) or Dual Boot. But wait, even though I am OK with fiddling the BIOS, I would try not to, atleast because not being the true asset owner. Knowing that Windows Linux Subsystem had been around for a while, I thought of giving it a shot.
 
