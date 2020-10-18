@@ -19,15 +19,15 @@ Now to my surprise, WSL was fast, efficient, and just-what-I-needed to handle my
 
 Then WSL is probably good for you. Steps to install are quite simple.
 
-## Enabling WSL-1* in Windows
+### 1. Enabling WSL-1* in Windows
 1. Now there is an implicit assumption made here. You need to be on a recent 64-bit Windows 10 to install WSL-1 (version 2004 and above for WSL-2).
 2. Fire up `powershell`, as an `Administrator` and paste this command:
     ```bash
-    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    >>> dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
     ```
     If you prefer the GUI way:
 
-    Start > Search "Turn Windows Features on or off" > Enable "Windows Subsystem for Linux" > OK.
+    Start > Search "Turn Windows Features on or off" > Enable "Windows Subsystem for Linux" (and "Virtual Machine Platform" if present) > OK.
 
     <div class="imgcap">
     <img src="{{ site.baseurl }}/assets/wsl/wsl_enable.png">
@@ -57,7 +57,7 @@ quark@karan:~/my-project-dir$ code .
 ```
 This will open your VSCode editor, right on WSL!
 
-## WSL-2
+### 2. On WSL-2
 
 WSL-1 is more of a container running on top of an emulated Linux kernel, on top of the regular Windows kernel (Jeez! That's an inception moment right there).
 
@@ -65,10 +65,25 @@ This limits your ability to install kernel-specific tools like Docker (which use
 
 For you, all that means is, WSL-2 shall become mainstream from Windows ver.2004 and upwards.
 
-## What changes with WSL-2?
+### 3. What changes with WSL-2?
 
 Newer is faster in terms of File IO, and uses full-fledged Linux kernels on top of Hyper-V. This allows you to install native Linux kernel applications like Docker.
 
 Unless you're a performance freak, or have stuff to do closer to kernel and syscalls, you are just better-off using WSL-1 for lightweight development.
 
-I shall update this blog to include WSL-2 install procedure soon.
+To install WSL-2, you need to be on a Windows build 1903 or higher (Check that in Settings > About this PC).
+
+1. Follow Steps: 1-3 as shown for WSL-1
+2. Open an elevated powershell
+    ```bash
+    # This will set all of your "upcoming" downloaded Linux distros to run on top of WSL-2
+    PS C:/Users/karan> wsl --set-default-version 2
+
+    # If you already had any distros installed, on older WSL platform,
+    # and want to convert to WSL-2? List them
+    PS C:/Users/karan> wsl --list --verbose
+
+    # Select and set it to 2[/1]
+    PS C:/Users/karan> wsl --set-version <distribution name> 2
+    ```
+3. Patiently watch the conversion process. You're done.
