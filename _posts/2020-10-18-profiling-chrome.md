@@ -4,21 +4,7 @@ title:  "Profiling your C++ application: A DIY Trace Analysis on Chrome"
 date:   2020-10-18 17:49:42 +0530
 excerpt: "It just isn't convenient to calculate time difference each time I want to profile a block of code. I write a small profiler whose results can be visualized on Google Chrome."
 ---
-
-In Python, this is what you'd *typically* do, to trace runtime of a block of code:
-
-```python
-# I wish Astrophysicists could use this to solve space-time continuum
-import time
-
-tstart = time.time()
-# ...computation...
-tstop = time.time()
-
-print("Time elapsed: ", tstop - tstart)
-```
-
-This was to gain familiarity with ease of code. C++ follows on similar footsteps:
+As a beginner, this was pretty much how I "profiled" my C++ application in a scope:
 
 ```cpp
 #include <chrono>
@@ -37,69 +23,28 @@ int main(){
 }
 ```
 
-This is 4x the statements to profile a block of code between the comments. Imagine doing this with a lot of scopes and functions. This naive implementation is a lot of work.
+This was 4x the statements to profile a block of code between the comments. This was intuitive, atleast to me. But as my compute regions grew, this naive method was getting outta hand.
 
-This doesn't even allow you to **visualize** the time slice taken up by each block/function you profile. Pictures speak way better [insert image], by all means.  Can we do better? Yes.
+Imagine doing this with a lot of scopes and functions. This naive implementation is a lot of work.
 
 Let's set two agendas here:
 1. Get rid of these multiple statements to be written each time. Ideally, I should be able to tell the compiler, which scopes to profile, simple as that.
-2. Visualize. Colors and bars are pretty.
+2. Visualize. I mean, who hates graphical views? Plus, this tool would come in real-handy when you have *concurrent* executions to profile.
 
-### 1. Managing scope of blocks
+### 1. Quick-n-Easy Scope-based Profiler
 
-One way to automate entry-exit of timing a function/scope would be, to really, exploit the concept of scopes.
+One way to automate entry-exit of timing a function/scope would be, exploit the concept of scopes. If it's not obvious yet, we'll use a *class*.
 
-As obvious it may sound, we'll use a class, a profiler class. We intend to use it in three easy steps:
+Why? Constructors and Destructors, that's why.
 
-1. Define your function/scope.
-2. Instantiate a profiler object: Within the `{curly-brace-scope}` or within function scope.
-3. The profiler object will time the computation, log the entry-exit time, destroy the object upon scope-exit.
+To use our Quick-n-Easy Scope-based Profiler, we would:
+1. Create a Timer object in the scope you want to profile. That's it.
 
-For example, take this simple Matrix Multiplication profiling:
-
-```cpp
-/* ... */
-template <typename T>
-void MatrixMulCPU(size_t M, size_t N, size_t P,
-				const std::vector<T> &a_host,
-				const std::vector<T> &b_host,
-				std::vector<T> &c_host) {
-
-    /*
-    This profiler call will log the runtime till the
-    implicitly created timer is destroyed (as a consequence of end
-    of function scope)
-    */
-    std::cout << "Starting CPU Profiling and computation...\n";
-    PROFILE_FUNCTION();
-
-    for (size_t i = 0; i < M; i++)
-        for (size_t k = 0; k < N; k++)
-            for (size_t j = 0; j < P; j++)
-                c_host[i * M + j] += a_host[i * M + k] * b_host[k * N + j];
-
-    std::cout << "End of CPU computation and auto-end of profiler scope.\n";
-}
-
-/* call MatrixMulCPU from anywhere */
-```
- Output of the Profiler logged for MatrixMulCPU
-```bash
-Starting CPU Profiling and computation...
-End of CPU computation and auto-end of profiler scope.
-void __cdecl MatrixMulCPU(size_t, size_t, size_t, const std::vector<T> &
-const std::vector<T> &, std::vector<T> &) [T = int]: 45671.3ms
-```
-
-Couple of good things about our upcoming Profiler:
-1. It manages start and stop time automatically. Constructors and Destructors take charge.
-2. It captures the function call type. You can end up having multiple overloads for a function. The profiler shows you 'which' variant of the function was called, in the signature, along with the return type.
-3. It will add an entry to a logged JSON file, which will (eventually) help us visualize using chrome://tracing
-
-#### Does this excite you?
-Let's write a Timer class. We'll start easy.
+Let's write a Timer class, shall we?
 
 ```cpp
+// profiler.h
+#pragma once
 #include <chrono>
 #include <iostream>
 
@@ -108,7 +53,7 @@ private:
     /* This will store the module/scope name */
     const char* func_name;
     /* A time_point datatype to store start time */
-    std::chrono::time_point<std::chrono::high_resolution_clock> startTimePoint;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_startTimePoint;
 
 public:
     /* Constructor: Measures the time_point when the profiling begins.
@@ -118,7 +63,7 @@ public:
     Timer(const char* name)
         : func_name(name)
     {
-        startTimePoint = std::chrono::high_resolution_clock::now();
+        m_startTimePoint = std::chrono::high_resolution_clock::now();
     }
 
     /* Destructor: Immediately called at the end-of-scope of the profiler object.
@@ -129,15 +74,74 @@ public:
 
     void Stop() {
         /* Measure the end time_point */
-        auto endTimePoint = std::chrono::high_resolution_clock::now();
+        auto m_endTimePoint = std::chrono::high_resolution_clock::now();
 
         /* Cast the gonzo numbers to microseconds */
-        auto start = std::chrono::time_point_cast<std::chrono::microseconds>(startTimePoint).time_since_epoch().count();
-        auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch().count();
+        auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch().count();
+        auto end = std::chrono::time_point_cast<std::chrono::microseconds>(m_endTimePoint).time_since_epoch().count();
 
         std::cout << func_name << ": " << (end - start) * 0.001 << "ms\n";
     }
 };
 ```
 
-This is a boilerplate. Let's see few examples of how this class can be used, and what problems does it solve so far.
+Let's see a few ways how this Timer is useful. We'll write a small workload, matrix multiplication.
+
+
+Here is an example of how our profiler *should* work, take this simple Matrix Multiplication profiling:
+
+```cpp
+// main.cpp
+#include <vector>
+#include <iostream>
+#include "profiler.h"
+
+template <typename T>
+void MatrixMulCPU(size_t M, size_t N, size_t P,
+    const std::vector<T>& a_host,
+    const std::vector<T>& b_host,
+    std::vector<T>& c_host) {
+
+    // Constructor gets called
+    Timer t("MatMul CPU fn body");
+
+    for (size_t i = 0; i < M; i++) {
+        for (size_t k = 0; k < N; k++)
+            for (size_t j = 0; j < P; j++)
+                c_host[i * M + j] += a_host[i * M + k] * b_host[k * N + j];
+    }
+    // Destructor gets called (end of scope)
+}
+
+int main() {
+    Timer t("Main");
+
+    size_t M = 64;
+    size_t N = 64;
+    size_t P = 64;
+
+    Timer *t1 = new Timer("Init vectors");
+    // Initialize all to 0.
+    std::vector<float> a_host(M * N, 0);
+    std::vector<float> b_host(N * P, 0);
+    std::vector<float> c_host(M * P, 0);
+    delete t1;
+
+    MatrixMulCPU<float>(M, N, P, a_host, b_host, c_host);
+    MatrixMulCPU<float>(M, N, P, a_host, b_host, c_host);
+    return 0;
+}
+```
+ Output of the Profiler logged for MatrixMulCPU
+```bash
+Init vectors: 0.112ms
+MatMul CPU fn body: 1.827ms
+MatMul CPU fn body: 1.642ms
+Main: 4.422ms
+```
+
+Now we're talking. You can profile multiple times, without having to write those extra lines of start-stop.
+
+But we still have some opens:
+1. Every time you create a Timer, you need to supply the "name" of the operation/function. This consumes time.
+2. You cannot "visualize" the flow here. The `Main: 4.22ms` includes runtimes of `MatMul` twice. How can you visualize the portion of time consumed within main? Sure, you can eyeball it. But in complex examples and projects you'll encounter, this gets very difficult very quickly.
