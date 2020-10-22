@@ -17,8 +17,10 @@ int main(){
     auto endTimePoint = std::chrono::high_resolution_clock::now();
 
     /* convert gonzo numbers to microseconds */
-    auto start = std::chrono::time_point_cast<std::chrono::microseconds>(startTimePoint).time_since_epoch().count();
-    auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch().count();
+    auto start =
+        std::chrono::time_point_cast<std::chrono::microseconds>(startTimePoint).time_since_epoch().count();
+    auto end =
+        std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch().count();
     std::cout << "Time elapsed: " << (end - start) * 0.001 << "ms\n";
 }
 ```
@@ -27,18 +29,16 @@ This was 4x the statements to profile a block of code between the comments. This
 
 Imagine doing this with a lot of scopes and functions. This naive implementation is a lot of work.
 
-Let's set two agendas here:
+Let's set three agendas here:
 1. Get rid of these multiple statements to be written each time. Ideally, I should be able to tell the compiler, which scopes to profile, simple as that.
-2. Visualize. I mean, who hates graphical views? Plus, this tool would come in real-handy when you have *concurrent* executions to profile.
+2. Automatically deduce the line numbers or function call names. We'd want our profiler to work just like breakpoints.
+3. Visualize. I mean, who hates graphical views? Plus, this tool would come in real-handy when you have *concurrent* executions to profile.
 
-### 1. Quick-n-Easy Scope-based Profiler
+### Part 1. Quick-n-Easy Scope-based Profiler
 
 One way to automate entry-exit of timing a function/scope would be, exploit the concept of scopes. If it's not obvious yet, we'll use a *class*.
 
 Why? Constructors and Destructors, that's why.
-
-To use our Quick-n-Easy Scope-based Profiler, we would:
-1. Create a Timer object in the scope you want to profile. That's it.
 
 Let's write a Timer class, shall we?
 
@@ -53,7 +53,8 @@ private:
     /* This will store the module/scope name */
     const char* func_name;
     /* A time_point datatype to store start time */
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_startTimePoint;
+    std::chrono::time_point<std::chrono::high_resolution_clock>
+        m_startTimePoint;
 
 public:
     /* Constructor: Measures the time_point when the profiling begins.
@@ -63,7 +64,8 @@ public:
     Timer(const char* name)
         : func_name(name)
     {
-        m_startTimePoint = std::chrono::high_resolution_clock::now();
+        m_startTimePoint =
+            std::chrono::high_resolution_clock::now();
     }
 
     /* Destructor: Immediately called at the end-of-scope of the profiler object.
@@ -74,11 +76,14 @@ public:
 
     void Stop() {
         /* Measure the end time_point */
-        auto m_endTimePoint = std::chrono::high_resolution_clock::now();
+        auto m_endTimePoint =
+            std::chrono::high_resolution_clock::now();
 
         /* Cast the gonzo numbers to microseconds */
-        auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch().count();
-        auto end = std::chrono::time_point_cast<std::chrono::microseconds>(m_endTimePoint).time_since_epoch().count();
+        auto start =
+            std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch().count();
+        auto end =
+            std::chrono::time_point_cast<std::chrono::microseconds>(m_endTimePoint).time_since_epoch().count();
 
         std::cout << func_name << ": " << (end - start) * 0.001 << "ms\n";
     }
@@ -143,5 +148,16 @@ Main: 4.422ms
 Now we're talking. You can profile multiple times, without having to write those extra lines of start-stop.
 
 But we still have some opens:
-1. Every time you create a Timer, you need to supply the "name" of the operation/function. This consumes time.
-2. You cannot "visualize" the flow here. The `Main: 4.22ms` includes runtimes of `MatMul` twice. How can you visualize the portion of time consumed within main? Sure, you can eyeball it. But in complex examples and projects you'll encounter, this gets very difficult very quickly.
+1. Every time we create a Timer, you need to supply the "name" of the operation/function. This consumes time. We will devise a method to "automatically" fill up the name of the function, or, the line number where it gets called.
+2. We cannot "visualize" the flow here. The `Main: 4.22ms` includes runtimes of `MatMul` twice.
+    ```bash
+    +--{ start::Main: 0.0ms
+    |---Init vectors: 0.112ms
+    |---MatMul CPU fn body: 1.827ms
+    |---MatMul CPU fn body: 1.642ms
+    +--} stop::Main: 4.422ms
+    ```
+    How can you visualize the portion of time consumed within main? Sure, you can eyeball it. But in complex examples and projects, this gets very difficult very quickly.
+
+### Part 2. Tidying it up
+We'll address the problem of supplying "function/scope name" here. It's quite easy. I kept this as a separate section, because I learnt few amazing C++ constructs here.
